@@ -1,10 +1,10 @@
 [![License](https://img.shields.io/badge/License-Apache%202.0-orange.svg)](https://opensource.org/licenses/Apache-2.0)
 
-# Running Vertica with Docker
+# Running OpenText Vertica Analytics Database with Docker
 
-[Vertica](https://www.vertica.com/) is a massively scalable analytics data warehouse that stores your data and performs analytics on it all in one place.
+[OpenText Vertica](https://www.opentext.com/products/analytics-database) is a massively scalable analytics data warehouse that stores your data and performs analytics on it all in one place.
 
-This Dockerfile creates a single-node container using the [Vertica Community Edition](https://www.vertica.com/docs/latest/HTML/Content/Authoring/GettingStartedGuide/DownloadingAndStartingVM/DownloadingAndStartingVM.htm) (CE) license. The CE license includes:
+This Dockerfile creates a single-node container using a user-provided installer (RPM or DEB) and license key. The container includes:
 - [VMart example database](https://www.vertica.com/docs/latest/HTML/Content/Authoring/GettingStartedGuide/IntroducingVMart/IntroducingVMart.htm)
 - Admintools
 - vsql
@@ -15,31 +15,26 @@ Install [Docker Desktop](https://www.docker.com/get-started) or [Docker Engine](
 
 # Supported Platforms
 
-Container techology provides the freedom to run environments independently of the host operating system. For example, you can run a CentOS container on an Ubuntu workstation, and vice versa.
+Container techology provides the freedom to run environments independently of the host operating system. For example, you can run a Rocky Linux container on an Ubuntu workstation, and vice versa.
 
 Vertica provides a Dockerfile for different distributions so that you can create an containerized environment that you are the most comfortable with. This is helpful if you need to access a container shell to perform tasks, such as administering the database with [admintools](https://www.vertica.com/docs/latest/HTML/Content/Authoring/AdministratorsGuide/AdminTools/WritingAdministrationToolsScripts.htm).
 
 ## Vertica
-- 12.x
-- 11.x
-- 10.x
+- 25.x
+- 24.x
+- 23.x
 
-## AlmaLinux
-- 8.6
+## RockyLinux
+- 9.x
 
 ## Ubuntu
-- 20.04
-- 18.04
-
-Vertica tests the AlmaLinux containers most thoroughly. Vertica provides the [Dockerfile_Ubuntu](./Dockerfile_Ubuntu) for users that have only a Vertica DEB file. You can adapt that Dockerfile for recent versions of Debian.
+- 24.04
 
 # How to use this image
 
 ## Store the Vertica RPM or DEB
 
-To build an image using this repository, you must store your Vertica RPM or DEB archive in the `./packages` directory.
-
-If you do not have a Vertica archive, register to download the free [Community Edition](https://www.vertica.com/try/) (CE) license. The CE license allows you to create a three-node Vertica cluster with a maximum of 1TB of storage.
+To build an image using this repository, you must store your Vertica RPM or DEB archive in the `./packages` directory and specify the package name as shown below.  You must also store a copy of the license key as "key.xml" in the packages directory.  Install media and license keys may be obtained from the software portal (SLD).  Or, you can sign up for a trial license through OpenText sales.
 
 ## Build the image
 
@@ -50,7 +45,7 @@ The following table describes base image properties that you can customize with 
 | Environment Variable | Description | Default Values |
 | :--------------------| :-----------| :--------------|
 | `TAG`          | Required. Image tag that represents the Vertica version. | `latest` |
-| `IMAGE_NAME`   | Required. Image name. | `vertica-ce` |
+| `IMAGE_NAME`   | Required. Image name. | `vertica-dev` |
 | `OS_TYPE`      | Required. Operating system distribution.  | `AlmaLinux` | 
 | `OS_VERSION`   | Required. Operatoring system versions. | AlmaLinux: `8.6`<br> Ubuntu: `18.04` | 
 | `VERTICA_PACKAGE` | Name of the RPM or DEB file. | AlmaLinux: `vertica-x86_64.RHEL6.latest.rpm`<br>Ubuntu: `vertica.latest.deb` |
@@ -60,17 +55,14 @@ The following table describes base image properties that you can customize with 
 ### Examples
 
 ```shell
-# Default values:
-$ make
+# Specify package name and use default values:
+$ make VERTICA_PACKAGE=vertica.latest.rpm
 
 # Custom image name and tag:
-$ make IMAGE_NAME=one-node-ce TAG=latest
+$ make IMAGE_NAME=one-node-dev TAG=latest
 
 # Ubuntu base OS:
 $ make OS_TYPE=Ubuntu Tag=latest  
-
-# Custom RPM file name:
-$ make VERTICA_PACKAGE=vertica-11.0.0.x86_64.RHEL6.rpm
 ```
 
 ### Customize the Vertica User
@@ -89,7 +81,7 @@ The following table describes database user properties that you can customize wi
 For example:
 
 ```shell
-$ make IMAGE_NAME=one-node-ce TAG=latest VERTICA_DB_USER=vertica VERTICA_DB_UID=1200
+$ make IMAGE_NAME=one-node-dev TAG=latest VERTICA_DB_USER=vertica VERTICA_DB_UID=1200
 ```
 ## Test the image
 
@@ -129,10 +121,10 @@ Start a container with the `start-vertica.sh` script and the following options:
 ```shell
 Usage: ./start-vertica.sh [-c cname] [-d cid_dir] [-h] [-i img_name] [-t tag] [-v hostpath:containerdir] -V docker-volume
 Options are:
- -c - specify container name (default is vertica_ce)
+ -c - specify container name (default is vertica_dev)
  -d - directory-for-cid.txt (default is the current directory)
  -h - show help
- -i image - specify image name (default is vertica-ce)
+ -i image - specify image name (default is vertica-dev)
  -p port - specify a port number to use for vsql to talk to vertica
  -t tag - specify the image tag (default is latest)
  -v hostpath:containerdir - mount hostpath as containerdir in the 
@@ -158,13 +150,13 @@ You can also start a container with `docker run`:
 ```shell
 $ docker run -p 5433:5433 \
            --mount type=volume,source=vertica-data,target=/data \
-           --name vertica_ce \
-           vertica-ce:latest
+           --name vertica_dev \
+           vertica-dev:latest
 ```
 In the preceding command:
 * `vertica-data` is a [Docker volume](https://docs.docker.com/storage/volumes/).
-* `vertica_ce` is the name of the container.
-* `vertica/vertica-ce` is the image name.
+* `vertica_dev` is the name of the container.
+* `vertica-dev` is the image name.
 
 ### Runtime configuration
 
@@ -173,7 +165,7 @@ When you execute `docker run`, you can inject environment variables at runtime:
 ```shell
 $ docker run -p 5433:5433 -d \
   -e TZ='Europe/Prague' \
-  vertica-ce:latest
+  vertica-dev:latest
 ```
 
 The following table describes environment variables that you can configure at runtime:
@@ -196,8 +188,8 @@ For example, run custom scripts with a [bind mount](https://docs.docker.com/stor
 ```shell
 $ docker run -p 5433:5433 \
            --mount type=bind,source=/tmp/.docker-entrypoint-initdb.d,target=/docker-entrypoint-initdb.d/ \
-           --name vertica_ce \
-           vertica-ce:latest
+           --name vertica_dev \
+           vertica-dev:latest
 ```
 
 # Access the container filesystem
