@@ -32,9 +32,9 @@ Vertica provides a Dockerfile for different distributions so that you can create
 
 # How to use this image
 
-## Store the Vertica RPM or DEB
+## Obtain Vertica Installer and License Key
 
-To build an image using this repository, you must store your Vertica RPM or DEB archive in the `./packages` directory and specify the package name as shown below.  You must also store a copy of the license key as "key.xml" in the packages directory.  Install media and license keys may be obtained from the software portal (SLD).  Or, you can sign up for a trial license through OpenText sales.
+To build an image using this repository, you must store your Vertica RPM or DEB archive in the `./packages` directory and specify the package name as shown below.  You must also store a copy of the license key as "key.xml" in the packages directory.  Install media and NON-PRODUCTION license key may be obtained from the software portal (SLD).  Or, you can sign up for a trial license through OpenText sales.
 
 ## Build the image
 
